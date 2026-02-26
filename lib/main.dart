@@ -46,7 +46,7 @@ class TripPlannerApp extends StatelessWidget {
         builder: (context) {
           final router = buildRouter(context);
           return MaterialApp.router(
-            title: 'Trip Planner',
+            title: 'Roads to go',
             theme: AppTheme.dark,
             routerConfig: router,
             debugShowCheckedModeBanner: false,
