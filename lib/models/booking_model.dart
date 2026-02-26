@@ -9,6 +9,9 @@ class DayPlan {
   final bool breakfast;
   final bool lunch;
   final bool dinner;
+  final bool breakfastCompleted;
+  final bool lunchCompleted;
+  final bool dinnerCompleted;
 
   DayPlan({
     this.destinationId,
@@ -19,6 +22,9 @@ class DayPlan {
     this.breakfast = false,
     this.lunch = false,
     this.dinner = false,
+    this.breakfastCompleted = false,
+    this.lunchCompleted = false,
+    this.dinnerCompleted = false,
   });
 
   factory DayPlan.fromMap(Map<String, dynamic> m) => DayPlan(
@@ -30,6 +36,9 @@ class DayPlan {
         breakfast: m['breakfast'] ?? false,
         lunch: m['lunch'] ?? false,
         dinner: m['dinner'] ?? false,
+        breakfastCompleted: m['breakfastCompleted'] ?? false,
+        lunchCompleted: m['lunchCompleted'] ?? false,
+        dinnerCompleted: m['dinnerCompleted'] ?? false,
       );
 
   Map<String, dynamic> toMap() => {
@@ -41,6 +50,9 @@ class DayPlan {
         'breakfast': breakfast,
         'lunch': lunch,
         'dinner': dinner,
+        'breakfastCompleted': breakfastCompleted,
+        'lunchCompleted': lunchCompleted,
+        'dinnerCompleted': dinnerCompleted,
       };
 }
 
@@ -58,6 +70,7 @@ class BookingModel {
   final double totalPrice;
   final String status;
   final DateTime bookedAt;
+  final DateTime startDate;
   final bool notificationsEnabled;
 
   BookingModel({
@@ -74,6 +87,7 @@ class BookingModel {
     required this.totalPrice,
     required this.status,
     required this.bookedAt,
+    required this.startDate,
     this.notificationsEnabled = true,
   });
 
@@ -100,6 +114,9 @@ class BookingModel {
       totalPrice: (d['totalPrice'] ?? 0).toDouble(),
       status: d['status'] ?? 'confirmed',
       bookedAt: (d['bookedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      startDate: (d['startDate'] as Timestamp?)?.toDate() ??
+          (d['bookedAt'] as Timestamp?)?.toDate() ??
+          DateTime.now(),
       notificationsEnabled: d['notificationsEnabled'] ?? true,
     );
   }
@@ -120,6 +137,7 @@ class BookingModel {
       'totalPrice': totalPrice,
       'status': status,
       'bookedAt': Timestamp.fromDate(bookedAt),
+      'startDate': Timestamp.fromDate(startDate),
       'notificationsEnabled': notificationsEnabled,
     };
   }

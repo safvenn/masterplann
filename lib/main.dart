@@ -8,10 +8,11 @@ import 'providers/auth_provider.dart';
 import 'providers/trip_provider.dart';
 import 'utils/app_theme.dart';
 import 'router.dart';
+import 'services/notification_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService().init();
   runApp(
     const ProviderScope(
       child: TripPlannerApp(),

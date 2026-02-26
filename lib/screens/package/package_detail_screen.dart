@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/trip_provider.dart';
@@ -27,6 +28,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen>
   List<String> _selectedActivities = [];
   bool _loading = false;
   bool _notificationsEnabled = true;
+  DateTime _startDate = DateTime.now().add(const Duration(days: 7));
 
   @override
   void initState() {
@@ -213,7 +215,12 @@ class _PackageDetailScreenState extends State<PackageDetailScreen>
                 controller: _tabCtrl,
                 children: [
                   _OverviewTab(
-                      pkg: pkg, destinations: pkgDests, vendor: _vendor),
+                    pkg: pkg,
+                    destinations: pkgDests,
+                    vendor: _vendor,
+                    startDate: _startDate,
+                    onDateChanged: (date) => setState(() => _startDate = date),
+                  ),
                   _DayPlanTab(
                     pkg: pkg,
                     days: _days,
@@ -265,21 +272,37 @@ class _PackageDetailScreenState extends State<PackageDetailScreen>
       context.push('/login');
       return;
     }
-    setState(() => _loading = true);
+
     final trip = context.read<TripProvider>();
+    final totalPrice = trip.calcPrice(_pkg!, _days, _dayPlan);
+
+    final paymentMethod = await _showPaymentSheet(context, totalPrice);
+    if (paymentMethod == null) return;
+
+    setState(() => _loading = true);
     final bookingId = await trip.createBooking(
       userId: auth.user!.id,
       pkg: _pkg!,
       days: _days,
       dayPlan: _dayPlan,
       activityIds: _selectedActivities,
-      totalPrice: trip.calcPrice(_pkg!, _days, _dayPlan),
+      totalPrice: totalPrice,
+      startDate: _startDate,
       notificationsEnabled: _notificationsEnabled,
     );
     setState(() => _loading = false);
     if (bookingId != null && context.mounted) {
       context.push('/booking/$bookingId');
     }
+  }
+
+  Future<String?> _showPaymentSheet(BuildContext context, double amount) {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _PaymentBottomSheet(amount: amount),
+    );
   }
 }
 
@@ -312,8 +335,15 @@ class _OverviewTab extends StatelessWidget {
   final PackageModel pkg;
   final List destinations;
   final UserModel? vendor;
-  const _OverviewTab(
-      {required this.pkg, required this.destinations, this.vendor});
+  final DateTime startDate;
+  final ValueChanged<DateTime> onDateChanged;
+  const _OverviewTab({
+    required this.pkg,
+    required this.destinations,
+    this.vendor,
+    required this.startDate,
+    required this.onDateChanged,
+  });
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -345,6 +375,54 @@ class _OverviewTab extends StatelessWidget {
               value: 'Tropical',
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: startDate,
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+            );
+            if (date != null) {
+              onDateChanged(date);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month_rounded,
+                    color: AppTheme.primary),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Starting Date',
+                        style: TextStyle(
+                            fontSize: 12, color: AppTheme.textSecondary)),
+                    Text(
+                      DateFormat('EEEE, MMM d, yyyy').format(startDate),
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                const Text('Change',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 24),
         if (pkg.highlights.isNotEmpty) ...[
@@ -1618,4 +1696,234 @@ class _QuickInfo extends StatelessWidget {
           ),
         ],
       );
+}
+
+class _PaymentBottomSheet extends StatefulWidget {
+  final double amount;
+  const _PaymentBottomSheet({required this.amount});
+
+  @override
+  State<_PaymentBottomSheet> createState() => _PaymentBottomSheetState();
+}
+
+class _PaymentBottomSheetState extends State<_PaymentBottomSheet> {
+  String? _selectedMethod;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black54, blurRadius: 40, offset: Offset(0, -10))
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Payment Methods',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    'Select your preferred way to pay',
+                    style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                  ),
+                ],
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primary.withOpacity(0.2),
+                      AppTheme.primary.withOpacity(0.05)
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                ),
+                child: Column(
+                  children: [
+                    const Text('Total Amount',
+                        style: TextStyle(
+                            fontSize: 10, color: AppTheme.textSecondary)),
+                    Text('₹${widget.amount.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.accent)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          const Text('UPI APPS',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: AppTheme.textMuted)),
+          const SizedBox(height: 12),
+          _PaymentOption(
+            id: 'gpay',
+            name: 'Google Pay',
+            icon: Icons.account_balance_wallet_rounded,
+            color: Colors.white,
+            isSelected: _selectedMethod == 'gpay',
+            onTap: () => setState(() => _selectedMethod = 'gpay'),
+          ),
+          _PaymentOption(
+            id: 'phonepe',
+            name: 'PhonePe',
+            icon: Icons.payments_rounded,
+            color: Colors.deepPurpleAccent,
+            isSelected: _selectedMethod == 'phonepe',
+            onTap: () => setState(() => _selectedMethod = 'phonepe'),
+          ),
+          _PaymentOption(
+            id: 'paytm',
+            name: 'Paytm',
+            icon: Icons.account_balance_rounded,
+            color: Colors.blue,
+            isSelected: _selectedMethod == 'paytm',
+            onTap: () => setState(() => _selectedMethod = 'paytm'),
+          ),
+          const SizedBox(height: 24),
+          const Text('CARDS',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: AppTheme.textMuted)),
+          const SizedBox(height: 12),
+          _PaymentOption(
+            id: 'card',
+            name: 'Credit / Debit Card',
+            icon: Icons.credit_card_rounded,
+            color: AppTheme.primary,
+            isSelected: _selectedMethod == 'card',
+            onTap: () => setState(() => _selectedMethod = 'card'),
+          ),
+          const SizedBox(height: 40),
+          SafeArea(
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _selectedMethod == null
+                    ? null
+                    : () => Navigator.pop(context, _selectedMethod),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 8,
+                  shadowColor: AppTheme.primary.withOpacity(0.5),
+                ),
+                child: const Text('Pay Securely',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentOption extends StatelessWidget {
+  final String id, name;
+  final IconData icon;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _PaymentOption({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primary.withOpacity(0.1) : AppTheme.bg2,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? AppTheme.primary : AppTheme.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                color:
+                    isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              const Icon(Icons.check_circle_rounded,
+                  color: AppTheme.primary, size: 24)
+            else
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.border, width: 2),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -147,11 +147,19 @@ class FirestoreService {
       });
 
   Future<void> updateDayMeals(String bookingId, int day,
-          {bool? breakfast, bool? lunch, bool? dinner}) =>
+          {bool? breakfast,
+          bool? lunch,
+          bool? dinner,
+          bool? bDone,
+          bool? lDone,
+          bool? dDone}) =>
       _db.collection('bookings').doc(bookingId).update({
         if (breakfast != null) 'dayPlan.$day.breakfast': breakfast,
         if (lunch != null) 'dayPlan.$day.lunch': lunch,
         if (dinner != null) 'dayPlan.$day.dinner': dinner,
+        if (bDone != null) 'dayPlan.$day.breakfastCompleted': bDone,
+        if (lDone != null) 'dayPlan.$day.lunchCompleted': lDone,
+        if (dDone != null) 'dayPlan.$day.dinnerCompleted': dDone,
       });
 
   Future<void> deleteBooking(String id) =>

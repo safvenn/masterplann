@@ -115,6 +115,7 @@ class TripProvider extends ChangeNotifier {
     required Map<int, DayPlan> dayPlan,
     required List<String> activityIds,
     required double totalPrice,
+    required DateTime startDate,
     bool notificationsEnabled = true,
   }) async {
     try {
@@ -132,6 +133,7 @@ class TripProvider extends ChangeNotifier {
         totalPrice: totalPrice,
         status: 'confirmed',
         bookedAt: DateTime.now(),
+        startDate: startDate,
         notificationsEnabled: notificationsEnabled,
       );
       final id = await _db.createBooking(booking);
@@ -170,6 +172,37 @@ class TripProvider extends ChangeNotifier {
   Future<void> updateBookingStatus(String id, String status) async {
     try {
       await _db.updateBookingStatus(id, status);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateDayCompletion(
+      String bookingId, int day, bool completed) async {
+    try {
+      await _db.updateDayCompletion(bookingId, day, completed);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateDayMeals(String bookingId, int day,
+      {bool? breakfast,
+      bool? lunch,
+      bool? dinner,
+      bool? bDone,
+      bool? lDone,
+      bool? dDone}) async {
+    try {
+      await _db.updateDayMeals(bookingId, day,
+          breakfast: breakfast,
+          lunch: lunch,
+          dinner: dinner,
+          bDone: bDone,
+          lDone: lDone,
+          dDone: dDone);
     } catch (e) {
       _error = e.toString();
       notifyListeners();
