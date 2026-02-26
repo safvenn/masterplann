@@ -48,6 +48,7 @@ class BookingModel {
   final String id;
   final String userId;
   final String packageId;
+  final String vendorId;
   final String packageName;
   final String packageCity;
   final String packageImage;
@@ -63,6 +64,7 @@ class BookingModel {
     required this.id,
     required this.userId,
     required this.packageId,
+    this.vendorId = '',
     required this.packageName,
     required this.packageCity,
     required this.packageImage,
@@ -88,6 +90,7 @@ class BookingModel {
       id: doc.id,
       userId: d['userId'] ?? '',
       packageId: d['packageId'] ?? '',
+      vendorId: d['vendorId'] ?? '',
       packageName: d['packageName'] ?? '',
       packageCity: d['packageCity'] ?? '',
       packageImage: d['packageImage'] ?? '',
@@ -107,6 +110,7 @@ class BookingModel {
     return {
       'userId': userId,
       'packageId': packageId,
+      'vendorId': vendorId,
       'packageName': packageName,
       'packageCity': packageCity,
       'packageImage': packageImage,

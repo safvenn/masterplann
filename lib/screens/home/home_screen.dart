@@ -69,8 +69,15 @@ class _HomeScreenState extends State<HomeScreen> {
             actions: [
               if (auth.isAdmin)
                 IconButton(
+                  tooltip: 'Admin Dashboard',
                   icon: const Icon(Icons.admin_panel_settings_rounded),
                   onPressed: () => context.push('/admin'),
+                ),
+              if (auth.isVendor)
+                IconButton(
+                  tooltip: 'Vendor Dashboard',
+                  icon: const Icon(Icons.store_rounded),
+                  onPressed: () => context.push('/vendor'),
                 ),
               if (auth.isLoggedIn)
                 IconButton(

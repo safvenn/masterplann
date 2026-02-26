@@ -32,11 +32,11 @@ class TripPlannerApp extends StatelessWidget {
           create: (_) => TripProvider(),
           update: (_, auth, trip) {
             trip ??= TripProvider();
-            if (auth.isLoggedIn) {
-              trip.init(auth.user?.id);
-            } else {
-              trip.init(null);
-            }
+            trip.init(
+              auth.user?.id,
+              isAdmin: auth.isAdmin,
+              isVendor: auth.isVendor,
+            );
             return trip;
           },
         ),

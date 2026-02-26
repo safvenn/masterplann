@@ -51,14 +51,24 @@ class AuthService {
     required String uid,
     required String name,
     String? photoUrl,
+    String? businessName,
+    String? businessAddress,
+    String? businessPhone,
+    String? description,
   }) async {
     final user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(name);
       if (photoUrl != null) await user.updatePhotoURL(photoUrl);
     }
-    final data = <String, dynamic>{'name': name};
-    if (photoUrl != null) data['photoUrl'] = photoUrl;
+    final data = <String, dynamic>{
+      'name': name,
+      if (photoUrl != null) 'photoUrl': photoUrl,
+      if (businessName != null) 'businessName': businessName,
+      if (businessAddress != null) 'businessAddress': businessAddress,
+      if (businessPhone != null) 'businessPhone': businessPhone,
+      if (description != null) 'description': description,
+    };
     await _db.collection('users').doc(uid).update(data);
   }
 }

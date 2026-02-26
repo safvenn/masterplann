@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/package_model.dart';
 import '../models/hotel_model.dart';
 import '../models/destination_model.dart';
+import '../models/activity_model.dart';
 import '../models/booking_model.dart';
 import '../services/firestore_service.dart';
 
@@ -11,7 +12,9 @@ class TripProvider extends ChangeNotifier {
   List<PackageModel> _packages = [];
   List<HotelModel> _hotels = [];
   List<DestinationModel> _destinations = [];
+  List<ActivityModel> _activities = [];
   List<BookingModel> _bookings = [];
+  List<BookingModel> _vendorBookings = [];
   bool _loading = false;
   String? _error;
 
@@ -21,7 +24,9 @@ class TripProvider extends ChangeNotifier {
   List<PackageModel> get packages => _packages;
   List<HotelModel> get hotels => _hotels;
   List<DestinationModel> get destinations => _destinations;
+  List<ActivityModel> get activities => _activities;
   List<BookingModel> get bookings => _bookings;
+  List<BookingModel> get vendorBookings => _vendorBookings;
   bool get loading => _loading;
   String? get error => _error;
 
@@ -29,7 +34,10 @@ class TripProvider extends ChangeNotifier {
   HotelModel? getHotel(String id) => _hotelMap[id];
   DestinationModel? getDest(String id) => _destMap[id];
 
-  void init(String? userId) {
+  List<Map<String, dynamic>> _users = [];
+  List<Map<String, dynamic>> get users => _users;
+
+  void init(String? userId, {bool isAdmin = false, bool isVendor = false}) {
     _db.packagesStream().listen((list) {
       _packages = list;
       notifyListeners();
@@ -44,13 +52,39 @@ class TripProvider extends ChangeNotifier {
       _destMap = {for (var d in list) d.id: d};
       notifyListeners();
     });
-    if (userId != null) {
-      _db.userBookingsStream(userId).listen((list) {
+    _db.activitiesStream().listen((list) {
+      _activities = list;
+      notifyListeners();
+    });
+
+    if (isAdmin) {
+      _db.allBookingsStream().listen((list) {
         _bookings = list;
+        notifyListeners();
+      });
+      _db.usersStream().listen((list) {
+        _users = list;
+        notifyListeners();
+      });
+    } else {
+      if (userId != null) {
+        _db.userBookingsStream(userId).listen((list) {
+          _bookings = list;
+          notifyListeners();
+        });
+      }
+    }
+
+    if (isVendor && userId != null) {
+      _db.vendorBookingsStream(userId).listen((list) {
+        _vendorBookings = list;
         notifyListeners();
       });
     }
   }
+
+  Future<void> updateUserRole(String uid, {bool? isVendor, bool? isAdmin}) =>
+      _db.updateUserRole(uid, isVendor: isVendor, isAdmin: isAdmin);
 
   // Helpers
   List<HotelModel> hotelsForPackage(PackageModel pkg) =>
@@ -88,6 +122,7 @@ class TripProvider extends ChangeNotifier {
         id: '',
         userId: userId,
         packageId: pkg.id,
+        vendorId: pkg.vendorId,
         packageName: pkg.name,
         packageCity: pkg.city,
         packageImage: pkg.image,
@@ -107,7 +142,7 @@ class TripProvider extends ChangeNotifier {
     }
   }
 
-  // Admin CRUD
+  // Vendor CRUD
   Future<void> addPackage(PackageModel pkg) => _db.addPackage(pkg);
   Future<void> updatePackage(String id, Map<String, dynamic> data) =>
       _db.updatePackage(id, data);
@@ -123,7 +158,14 @@ class TripProvider extends ChangeNotifier {
       _db.updateDestination(id, data);
   Future<void> deleteDestination(String id) => _db.deleteDestination(id);
 
+  Future<void> addActivity(ActivityModel a) => _db.addActivity(a);
+  Future<void> updateActivity(String id, Map<String, dynamic> data) =>
+      _db.updateActivity(id, data);
+  Future<void> deleteActivity(String id) => _db.deleteActivity(id);
+
   Future<void> deleteBooking(String id) => _db.deleteBooking(id);
+
+  Future<void> deleteUser(String uid) => _db.deleteUser(uid);
 
   Future<void> updateBookingStatus(String id, String status) async {
     try {

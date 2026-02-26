@@ -102,14 +102,30 @@ class ProfileScreen extends StatelessWidget {
                         label: 'Email',
                         value: user.email,
                       ),
-                      if (user.isAdmin) ...[
+                      if (user.isVendor) ...[
                         const _Divider(),
                         _InfoRow(
-                          icon: Icons.admin_panel_settings_rounded,
+                          icon: Icons.store_rounded,
                           label: 'Role',
-                          value: 'Administrator',
+                          value: 'Vendor',
                           valueColor: AppTheme.primary,
                         ),
+                        if (user.businessName?.isNotEmpty == true) ...[
+                          const _Divider(),
+                          _InfoRow(
+                            icon: Icons.business_rounded,
+                            label: 'Business Name',
+                            value: user.businessName ?? '',
+                          ),
+                        ],
+                        if (user.businessPhone?.isNotEmpty == true) ...[
+                          const _Divider(),
+                          _InfoRow(
+                            icon: Icons.phone_rounded,
+                            label: 'Business Phone',
+                            value: user.businessPhone ?? '',
+                          ),
+                        ],
                       ],
                       const _Divider(),
                       _InfoRow(
@@ -133,12 +149,21 @@ class ProfileScreen extends StatelessWidget {
                         color: const Color(0xFF818CF8),
                         onTap: () => context.push('/my-bookings'),
                       ),
+                      if (user.isVendor) ...[
+                        const _Divider(),
+                        _ActionRow(
+                          icon: Icons.store_rounded,
+                          label: 'Vendor Dashboard',
+                          color: AppTheme.accent,
+                          onTap: () => context.push('/vendor'),
+                        ),
+                      ],
                       if (user.isAdmin) ...[
                         const _Divider(),
                         _ActionRow(
                           icon: Icons.admin_panel_settings_rounded,
                           label: 'Admin Panel',
-                          color: AppTheme.accent,
+                          color: Colors.redAccent,
                           onTap: () => context.push('/admin'),
                         ),
                       ],

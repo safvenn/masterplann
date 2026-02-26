@@ -5,7 +5,9 @@ import '../../providers/trip_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/trip_image.dart';
 import '../../models/package_model.dart';
+import '../../models/user_model.dart';
 import '../../models/booking_model.dart';
+import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
 
 class PackageDetailScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
   PackageModel? _pkg;
+  UserModel? _vendor;
   int _days = 3;
   Map<int, DayPlan> _dayPlan = {};
   List<String> _selectedActivities = [];
@@ -57,6 +60,12 @@ class _PackageDetailScreenState extends State<PackageDetailScreen>
       _days = pkg.minDays;
       _buildDefaultPlan(trip, pkg);
     });
+
+    if (pkg.vendorId.isNotEmpty) {
+      AuthService().getUserModel(pkg.vendorId).then((v) {
+        if (mounted) setState(() => _vendor = v);
+      });
+    }
   }
 
   void _buildDefaultPlan(TripProvider trip, PackageModel pkg) {
@@ -203,7 +212,8 @@ class _PackageDetailScreenState extends State<PackageDetailScreen>
               child: TabBarView(
                 controller: _tabCtrl,
                 children: [
-                  _OverviewTab(pkg: pkg, destinations: pkgDests),
+                  _OverviewTab(
+                      pkg: pkg, destinations: pkgDests, vendor: _vendor),
                   _DayPlanTab(
                     pkg: pkg,
                     days: _days,
@@ -301,7 +311,9 @@ class _Badge extends StatelessWidget {
 class _OverviewTab extends StatelessWidget {
   final PackageModel pkg;
   final List destinations;
-  const _OverviewTab({required this.pkg, required this.destinations});
+  final UserModel? vendor;
+  const _OverviewTab(
+      {required this.pkg, required this.destinations, this.vendor});
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -372,6 +384,74 @@ class _OverviewTab extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+        if (vendor != null) ...[
+          const SizedBox(height: 24),
+          const Text(
+            'Organizer',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppTheme.primary.withOpacity(0.1),
+                  child: const Icon(Icons.business_rounded,
+                      color: AppTheme.primary),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              vendor!.businessName ?? vendor!.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.verified_rounded,
+                              color: Colors.blue, size: 16),
+                        ],
+                      ),
+                      if (vendor!.businessPhone != null)
+                        Text(
+                          'Mobile: ${vendor!.businessPhone}',
+                          style: const TextStyle(
+                              color: AppTheme.textSecondary, fontSize: 13),
+                        ),
+                      if (vendor!.businessAddress != null)
+                        Text(
+                          vendor!.businessAddress!,
+                          style: const TextStyle(
+                              color: AppTheme.textMuted, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon:
+                      const Icon(Icons.call_outlined, color: AppTheme.primary),
+                  onPressed: () {}, // Could launch url_launcher here
+                ),
+              ],
             ),
           ),
         ],
@@ -577,6 +657,7 @@ class _DayPlanTab extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 24),
                     child: _DayCard(
+                      pkg: pkg,
                       day: day,
                       isArrival: isArrival,
                       isDeparture: isDeparture,
@@ -619,6 +700,7 @@ class _CircleBtn extends StatelessWidget {
 }
 
 class _DayCard extends StatefulWidget {
+  final PackageModel pkg;
   final int day;
   final bool isArrival, isDeparture;
   final dynamic assignedDest, assignedHotel;
@@ -626,6 +708,7 @@ class _DayCard extends StatefulWidget {
   final Map<int, DayPlan> dayPlan;
   final ValueChanged<Map<int, DayPlan>> onPlanChanged;
   const _DayCard({
+    required this.pkg,
     required this.day,
     required this.isArrival,
     required this.isDeparture,
@@ -736,6 +819,33 @@ class _DayCardState extends State<_DayCard> {
     );
   }
 
+  bool _anyMealSelected() {
+    final plan = widget.dayPlan[widget.day];
+    return (plan?.breakfast ?? false) ||
+        (plan?.lunch ?? false) ||
+        (plan?.dinner ?? false);
+  }
+
+  Widget _MenuRow(String label, String menu) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$label: ',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: AppTheme.primary)),
+          Expanded(
+              child: Text(menu,
+                  style: const TextStyle(
+                      fontSize: 11, color: AppTheme.textSecondary))),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBody() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -832,16 +942,19 @@ class _DayCardState extends State<_DayCard> {
               ],
             ),
             const SizedBox(height: 14),
-            const Text(
-              'Included Meals',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary,
-              ),
+          ],
+          const Text(
+            'Included Meals',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textSecondary,
             ),
-            const SizedBox(height: 8),
-            Row(
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
               children: [
                 _MealToggle(
                   label: 'Breakfast',
@@ -857,6 +970,7 @@ class _DayCardState extends State<_DayCard> {
                       breakfast: v,
                       lunch: current?.lunch ?? false,
                       dinner: current?.dinner ?? false,
+                      isCompleted: current?.isCompleted ?? false,
                     );
                     widget.onPlanChanged(newPlan);
                   },
@@ -876,6 +990,7 @@ class _DayCardState extends State<_DayCard> {
                       breakfast: current?.breakfast ?? false,
                       lunch: v,
                       dinner: current?.dinner ?? false,
+                      isCompleted: current?.isCompleted ?? false,
                     );
                     widget.onPlanChanged(newPlan);
                   },
@@ -895,14 +1010,37 @@ class _DayCardState extends State<_DayCard> {
                       breakfast: current?.breakfast ?? false,
                       lunch: current?.lunch ?? false,
                       dinner: v,
+                      isCompleted: current?.isCompleted ?? false,
                     );
                     widget.onPlanChanged(newPlan);
                   },
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+          ),
+          if (_anyMealSelected()) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.dayPlan[widget.day]?.breakfast ?? false)
+                    _MenuRow('Breakfast', widget.pkg.breakfastMenu),
+                  if (widget.dayPlan[widget.day]?.lunch ?? false)
+                    _MenuRow('Lunch', widget.pkg.lunchMenu),
+                  if (widget.dayPlan[widget.day]?.dinner ?? false)
+                    _MenuRow('Dinner', widget.pkg.dinnerMenu),
+                ],
+              ),
+            ),
           ],
+          const SizedBox(height: 14),
           const Text(
             'Hotel',
             style: TextStyle(
@@ -1145,11 +1283,91 @@ class _ActivitiesTab extends StatelessWidget {
         ),
       );
     }
-    return const Center(
-      child: Text(
-        'Activities coming via Firestore',
-        style: TextStyle(color: AppTheme.textMuted),
-      ),
+    final trip = context.watch<TripProvider>();
+    final linkedActivities =
+        trip.activities.where((a) => activityIds.contains(a.id)).toList();
+
+    if (linkedActivities.isEmpty) {
+      return const Center(
+        child: Text(
+          'No activity details found',
+          style: TextStyle(color: AppTheme.textMuted),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: linkedActivities.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, i) {
+        final a = linkedActivities[i];
+        final isSelected = selected.contains(a.id);
+        return GestureDetector(
+          onTap: () => onToggle(a.id),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected ? AppTheme.primary : AppTheme.border,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            clipBehavior: Clip.hardEdge,
+            child: Row(
+              children: [
+                TripImage(
+                  imageUrl: a.image,
+                  height: 90,
+                  width: 90,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          a.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          a.category,
+                          style: const TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '₹${a.price}',
+                          style: const TextStyle(
+                            color: AppTheme.accent,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (_) => onToggle(a.id),
+                  activeColor: AppTheme.primary,
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

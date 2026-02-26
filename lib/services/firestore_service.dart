@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/package_model.dart';
 import '../models/hotel_model.dart';
 import '../models/destination_model.dart';
+import '../models/activity_model.dart';
 import '../models/booking_model.dart';
 
 class FirestoreService {
@@ -84,10 +85,44 @@ class FirestoreService {
   Future<void> deleteDestination(String id) =>
       _db.collection('destinations').doc(id).delete();
 
+  // ── ACTIVITIES ────────────────────────────────────────────────────
+  Stream<List<ActivityModel>> activitiesStream() => _db
+      .collection('activities')
+      .snapshots()
+      .map((s) => s.docs.map(ActivityModel.fromFirestore).toList());
+
+  Future<List<ActivityModel>> getActivitiesByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final futures = ids.map((id) => _db.collection('activities').doc(id).get());
+    final docs = await Future.wait(futures);
+    return docs
+        .where((d) => d.exists)
+        .map(ActivityModel.fromFirestore)
+        .toList();
+  }
+
+  Future<String> addActivity(ActivityModel activity) async {
+    final ref = await _db.collection('activities').add(activity.toFirestore());
+    return ref.id;
+  }
+
+  Future<void> updateActivity(String id, Map<String, dynamic> data) =>
+      _db.collection('activities').doc(id).update(data);
+
+  Future<void> deleteActivity(String id) =>
+      _db.collection('activities').doc(id).delete();
+
   // ── BOOKINGS ──────────────────────────────────────────────────────
   Stream<List<BookingModel>> userBookingsStream(String userId) => _db
       .collection('bookings')
       .where('userId', isEqualTo: userId)
+      .orderBy('bookedAt', descending: true)
+      .snapshots()
+      .map((s) => s.docs.map(BookingModel.fromFirestore).toList());
+
+  Stream<List<BookingModel>> vendorBookingsStream(String vendorId) => _db
+      .collection('bookings')
+      .where('vendorId', isEqualTo: vendorId)
       .orderBy('bookedAt', descending: true)
       .snapshots()
       .map((s) => s.docs.map(BookingModel.fromFirestore).toList());
@@ -121,4 +156,19 @@ class FirestoreService {
 
   Future<void> deleteBooking(String id) =>
       _db.collection('bookings').doc(id).delete();
+
+  // ── USERS (Admin Only) ───────────────────────────────────────────
+  Stream<List<Map<String, dynamic>>> usersStream() => _db
+      .collection('users')
+      .snapshots()
+      .map((s) => s.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList());
+
+  Future<void> updateUserRole(String uid, {bool? isVendor, bool? isAdmin}) =>
+      _db.collection('users').doc(uid).update({
+        if (isVendor != null) 'isVendor': isVendor,
+        if (isAdmin != null) 'isAdmin': isAdmin,
+      });
+
+  Future<void> deleteUser(String uid) =>
+      _db.collection('users').doc(uid).delete();
 }

@@ -7,8 +7,10 @@ import 'screens/package/package_detail_screen.dart';
 import 'screens/booking/booking_screen.dart';
 import 'screens/booking/my_bookings_screen.dart';
 import 'screens/auth/auth_screen.dart';
-import 'screens/admin/admin_screen.dart';
+import 'screens/admin/vendor_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/admin/add_package_screen.dart';
+import 'screens/admin/admin_dashboard.dart';
 
 GoRouter buildRouter(BuildContext context) {
   final authProvider = context.read<AuthProvider>();
@@ -23,9 +25,11 @@ GoRouter buildRouter(BuildContext context) {
       final isAuthPage = location == '/login' ||
           location == '/register' ||
           location == '/auth';
+
       final isProtected = location.startsWith('/my-bookings') ||
           location.startsWith('/booking') ||
-          location == '/admin' ||
+          location.startsWith('/vendor') ||
+          location.startsWith('/admin') ||
           location == '/profile';
 
       // Still loading — wait
@@ -33,6 +37,13 @@ GoRouter buildRouter(BuildContext context) {
 
       // Not logged in and trying to access protected page
       if (!auth.isLoggedIn && isProtected) return '/login';
+
+      // Admin area protection
+      if (location.startsWith('/admin') && !auth.isAdmin) return '/';
+
+      // Vendor area protection
+      if (location.startsWith('/vendor') && !auth.isVendor && !auth.isAdmin)
+        return '/';
 
       // Logged in but on auth pages — go home
       // Don't redirect from auth pages during sign-in (let the screen handle it)
@@ -62,7 +73,16 @@ GoRouter buildRouter(BuildContext context) {
           builder: (c, s) => const AuthScreen(initialTab: 1)),
       GoRoute(path: '/auth', builder: (c, s) => const AuthScreen()),
       GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
-      GoRoute(path: '/admin', builder: (c, s) => const AdminScreen()),
+      GoRoute(path: '/vendor', builder: (c, s) => const VendorScreen()),
+      GoRoute(path: '/admin', builder: (c, s) => const AdminDashboard()),
+      GoRoute(
+        path: '/vendor/add-package',
+        builder: (c, s) => const AddPackageScreen(),
+      ),
+      GoRoute(
+        path: '/vendor/edit-package/:id',
+        builder: (c, s) => AddPackageScreen(packageId: s.pathParameters['id']),
+      ),
     ],
   );
 }

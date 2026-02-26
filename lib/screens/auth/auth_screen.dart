@@ -169,7 +169,13 @@ class _LoginFormState extends State<_LoginForm>
       if (!mounted) return;
 
       if (ok) {
-        context.go('/');
+        if (auth.isAdmin) {
+          context.go('/admin');
+        } else if (auth.isVendor) {
+          context.go('/vendor');
+        } else {
+          context.go('/');
+        }
       } else {
         setState(() {
           _inlineError = auth.error ?? 'Sign in failed. Please try again.';
@@ -351,8 +357,15 @@ class _RegisterFormState extends State<_RegisterForm>
             behavior: SnackBarBehavior.floating,
           ),
         );
-        await Future.delayed(const Duration(milliseconds: 400));
-        if (mounted) context.go('/');
+        if (mounted) {
+          if (auth.isAdmin) {
+            context.go('/admin');
+          } else if (auth.isVendor) {
+            context.go('/vendor');
+          } else {
+            context.go('/');
+          }
+        }
       } else {
         setState(() {
           _inlineError = auth.error ?? 'Registration failed. Please try again.';

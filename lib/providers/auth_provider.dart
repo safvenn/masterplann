@@ -21,6 +21,7 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus get status => _status;
   String? get error => _error;
   bool get loading => _loading;
+  bool get isVendor => _user?.isVendor ?? false;
   bool get isAdmin => _user?.isAdmin ?? false;
   bool get isLoggedIn => _status == AuthStatus.authenticated;
 
@@ -116,6 +117,10 @@ class AuthProvider extends ChangeNotifier {
   Future<String?> updateProfile({
     required String name,
     String? photoUrl,
+    String? businessName,
+    String? businessAddress,
+    String? businessPhone,
+    String? description,
   }) async {
     if (_user == null) return 'Not logged in.';
     _loading = true;
@@ -125,8 +130,19 @@ class AuthProvider extends ChangeNotifier {
         uid: _user!.id,
         name: name,
         photoUrl: photoUrl,
+        businessName: businessName,
+        businessAddress: businessAddress,
+        businessPhone: businessPhone,
+        description: description,
       );
-      _user = _user!.copyWith(name: name, photoUrl: photoUrl);
+      _user = _user!.copyWith(
+        name: name,
+        photoUrl: photoUrl,
+        businessName: businessName,
+        businessAddress: businessAddress,
+        businessPhone: businessPhone,
+        description: description,
+      );
       _error = null;
       return null; // success
     } catch (e) {
