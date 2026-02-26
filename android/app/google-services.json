@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "729004879750",
+    "project_id": "chit-chat-64d4b",
+    "storage_bucket": "chit-chat-64d4b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:729004879750:android:81752778372bccce5f4607",
+        "android_client_info": {
+          "package_name": "com.tripplanner.trip_planner_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKovusKlVQ1y8VFZ9WTp3-i6oTD1WzXfE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:729004879750:android:f385020435b71cd65f4607",
+        "android_client_info": {
+          "package_name": "www.chit.chat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKovusKlVQ1y8VFZ9WTp3-i6oTD1WzXfE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
