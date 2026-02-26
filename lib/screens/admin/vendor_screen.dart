@@ -11,6 +11,7 @@ import '../../models/booking_model.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/image_picker_widget.dart';
 import '../../widgets/trip_image.dart';
+import '../../providers/theme_provider.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  VENDOR SCREEN
@@ -74,8 +75,94 @@ class _VendorScreenState extends State<VendorScreen>
     return Scaffold(
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        title: const Text('Vendor Console'),
+        toolbarHeight: 80,
+        backgroundColor: AppTheme.card,
         elevation: 0,
+        centerTitle: false,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: AppTheme.primary.withOpacity(0.1),
+              child: const Icon(Icons.person_rounded,
+                  color: AppTheme.primary, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Vendor Console',
+                    style: TextStyle(
+                        color: AppTheme.textMuted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    auth.user?.name ?? 'Vendor',
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Consumer<ThemeProvider>(
+            builder: (context, theme, _) => IconButton(
+              onPressed: () => theme.toggleTheme(),
+              icon: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  theme.isDarkMode
+                      ? Icons.light_mode_rounded
+                      : Icons.dark_mode_rounded,
+                  color: AppTheme.primary,
+                  size: 18,
+                ),
+              ),
+              tooltip: 'Toggle Theme',
+            ),
+          ),
+          IconButton(
+            onPressed: () => _tabCtrl.animateTo(6), // Switch to Profile tab
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.edit_rounded,
+                  color: AppTheme.primary, size: 18),
+            ),
+            tooltip: 'Edit Profile',
+          ),
+          IconButton(
+            onPressed: () {
+              auth.signOut();
+              context.go('/auth');
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.danger.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.logout_rounded,
+                  color: AppTheme.danger, size: 18),
+            ),
+            tooltip: 'Logout',
+          ),
+          const SizedBox(width: 8),
+        ],
         bottom: TabBar(
           controller: _tabCtrl,
           isScrollable: true,
@@ -84,23 +171,23 @@ class _VendorScreenState extends State<VendorScreen>
           labelColor: AppTheme.primary,
           unselectedLabelColor: AppTheme.textMuted,
           labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           tabs: const [
             Tab(
-                text: 'Dashboard',
-                icon: Icon(Icons.dashboard_rounded, size: 18)),
-            Tab(text: 'Packages', icon: Icon(Icons.luggage_rounded, size: 18)),
-            Tab(text: 'Hotels', icon: Icon(Icons.hotel_rounded, size: 18)),
-            Tab(text: 'Destinations', icon: Icon(Icons.map_rounded, size: 18)),
+                text: 'Overview',
+                icon: Icon(Icons.dashboard_rounded, size: 16)),
+            Tab(text: 'Packages', icon: Icon(Icons.luggage_rounded, size: 16)),
+            Tab(text: 'Hotels', icon: Icon(Icons.hotel_rounded, size: 16)),
+            Tab(text: 'Dests', icon: Icon(Icons.map_rounded, size: 16)),
             Tab(
-                text: 'Activities',
-                icon: Icon(Icons.local_activity_rounded, size: 18)),
+                text: 'Acts',
+                icon: Icon(Icons.local_activity_rounded, size: 16)),
             Tab(
                 text: 'Bookings',
-                icon: Icon(Icons.book_online_rounded, size: 18)),
+                icon: Icon(Icons.book_online_rounded, size: 16)),
             Tab(
-                text: 'Profile',
-                icon: Icon(Icons.business_center_rounded, size: 18)),
+                text: 'Details',
+                icon: Icon(Icons.business_center_rounded, size: 16)),
           ],
         ),
       ),
@@ -158,39 +245,6 @@ class _DashboardTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Row(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: AppTheme.primary.withOpacity(0.1),
-              child: const Icon(Icons.person_rounded,
-                  color: AppTheme.primary, size: 32),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome back,',
-                    style: TextStyle(
-                        color: AppTheme.textMuted,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  Text(
-                    auth.user?.name ?? 'Vendor',
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 28),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

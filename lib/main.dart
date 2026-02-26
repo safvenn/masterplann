@@ -9,6 +9,7 @@ import 'providers/trip_provider.dart';
 import 'utils/app_theme.dart';
 import 'router.dart';
 import 'services/notification_service.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -41,13 +42,17 @@ class TripPlannerApp extends StatelessWidget {
             return trip;
           },
         ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Builder(
         builder: (context) {
           final router = buildRouter(context);
+          final theme = context.watch<ThemeProvider>();
           return MaterialApp.router(
             title: 'Roads to go',
-            theme: AppTheme.dark,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: theme.themeMode,
             routerConfig: router,
             debugShowCheckedModeBanner: false,
           );

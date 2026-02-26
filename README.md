@@ -1,174 +1,119 @@
-# Trip Planner Flutter App — Firebase Setup Guide
+# 🗺️ Roads to go — Premium Trip Planner
 
-## 🔥 Firebase Project Setup (Required Before Running)
-
-### Step 1: Create a Firebase Project
-1. Go to **[https://console.firebase.google.com](https://console.firebase.google.com)**
-2. Click **Add Project** → name it `trip-planner`
-3. Disable Google Analytics (optional) → **Create Project**
+**Roads to go** is a state-of-the-art Flutter travel application designed to simplify journey planning through curated itineraries, real-time tracking, and a powerful vendor ecosystem.
 
 ---
 
-### Step 2: Enable Firebase Services
+## ✨ Core Features
 
-#### Authentication
-1. In Firebase Console → **Build > Authentication**
-2. Click **Get started** → **Sign-in method**
-3. Enable **Email/Password** provider → Save
+### 👤 User Experience
+- **Discovery Engine**: Browse high-quality packages categorized by vibes (Adventure, Beach, Cultural, etc.).
+- **Smart Itinerary Planner**: Interactive day-by-day planning including hotel selection and destination mapping.
+- **Meal Personalization**: Opt-in/out of Breakfast, Lunch, and Dinner with region-specific authentic menus.
+- **Progress Tracking**: Visual progress bar on active trips to track itinerary completion.
+- **Local Reminders**: Automated notifications 15 minutes before every major activity (Food, Visit, Move).
+- **My Bookings**: Comprehensive history of past and upcoming trips with detailed schedule views.
 
-#### Firestore Database
-1. **Build > Firestore Database** → **Create database**
-2. Choose **Start in test mode** (for development)
-3. Pick a region closest to you → **Done**
-
----
-
-### Step 3: Add Apps to Firebase
-
-#### Android
-1. **Project Settings** > **Add app** → Android icon
-2. Android package name: `com.tripplanner.tripPlannerApp`
-3. Download `google-services.json`
-4. Place it at: `android/app/google-services.json`
-
-#### iOS
-1. **Add app** → Apple icon
-2. Bundle ID: `com.tripplanner.tripPlannerApp`
-3. Download `GoogleService-Info.plist`
-4. Place it at: `ios/Runner/GoogleService-Info.plist`
-
-#### Web
-1. **Add app** → Web icon
-2. Register app name
-3. Copy the Firebase config values
+### 💼 Vendor & Admin Console
+- **Direct Login**: Vendors are immediately routed to a professional management suite.
+- **Overview Dashboard**: Real-time stats on Revenue, Active Packages, and Pending Bookings.
+- **India Grand Setup**: One-click population of 14+ Indian cities with 80+ linked records (Hotels, Activities, Dests).
+- **Full CRUD Control**: Seamlessly manage Packages, Hotels, Destinations, and Activities.
+- **Booking Management**: Track and confirm user bookings in real-time.
 
 ---
 
-### Step 4: Configure the App
-
-**Option A — FlutterFire CLI (Recommended)**
-```bash
-# Install the CLI
-dart pub global activate flutterfire_cli
-
-# In the project root:
-flutterfire configure
-
-# This auto-generates lib/firebase_options.dart
-```
-
-**Option B — Manual**
-Open `lib/firebase_options.dart` and replace all `YOUR_*` placeholders with real values from **Firebase Console > Project Settings > Your Apps**.
+## 🛠️ Technical Stack
+- **Frontend**: Flutter (3.x) with Provider for state management.
+- **Backend**: Firebase (Firestore, Auth, Storage).
+- **Navigation**: GoRouter with asynchronous auth guards.
+- **Notifications**: `flutter_local_notifications` + `timezone` for precision scheduling.
+- **Theming**: Custom Dark Mode "Vibe" with premium HSL-tailored colors.
 
 ---
 
-### Step 5: Set up Android gradle files
+## 📈 Data Flow Diagram (DFD)
 
-In `android/build.gradle` (project level), add:
-```gradle
-plugins {
-    id 'com.google.gms.google-services' version '4.4.0' apply false
-}
-```
-
-In `android/app/build.gradle`, add at the bottom:
-```gradle
-apply plugin: 'com.google.gms.google-services'
+```mermaid
+graph TD
+    A[User/Vendor] -->|Auth| B(Firebase Authentication)
+    B -->|User Role| C{Access Guard}
+    
+    C -->|User| D[Home Screen]
+    C -->|Vendor| E[Vendor Console]
+    
+    D -->|Search/Filter| F[Package Discovery]
+    F -->|Select| G[Package Details]
+    G -->|Customize| H[Trip Planner]
+    H -->|Confirm| I[(Firestore: Bookings)]
+    
+    I -->|Trigger| J[Notification Service]
+    J -->|Schedule| K[Local Mobile Notifications]
+    
+    E -->|Manage| L[Package/Hotel/Dest CRUD]
+    L -->|Sync| M[(Firestore: Assets)]
+    M -->|Display| F
 ```
 
 ---
 
-### Step 6: Firestore Security Rules (Production)
-Replace the default test rules with:
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users can read/write their own data
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    // Anyone can read packages, hotels, destinations
-    match /packages/{id} { allow read: if true; allow write: if request.auth.token.isAdmin == true; }
-    match /hotels/{id} { allow read: if true; allow write: if request.auth.token.isAdmin == true; }
-    match /destinations/{id} { allow read: if true; allow write: if request.auth.token.isAdmin == true; }
-    // Bookings: users manage their own
-    match /bookings/{id} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid);
-      allow create: if request.auth != null;
-    }
-  }
-}
-```
+## 🔄 App Working Flow (Step-by-Step)
+
+### 1. The Gateway (Authentication)
+- Users sign up or log in via `AuthScreen`.
+- **Logic**: The app checks the user role (`isAdmin`, `isVendor`, or regular user).
+- **Flow**: Regular users land on `HomeScreen`, while Vendors are redirected straight to `VendorScreen`.
+
+### 2. The Search (Discovery)
+- Users browse the `HomeScreen` which pulls live data from the `packages` collection in Firestore.
+- Shimmer loading and cached images provide a premium feel.
+
+### 3. The Plan (Customization)
+- In `PackageDetailScreen`, users select their trip dates.
+- For each day, they can view assigned Hotels and Destinations.
+- The **Meal Toggle** allows selecting specific meals (BF, LN, DN) which updates the booking details.
+
+### 4. The Commitment (Booking)
+- Clicking "Book Now" creates a `BookingModel` document. 
+- The `NotificationService` immediately parses the booking dates and times to schedule local reminders.
+
+### 5. The Journey (Execution)
+- Users track their trip in `MyBookingsScreen`.
+- A progressive timeline shows "What's Next" based on the current time.
+- **Notifications** pop up 15 minutes before scheduled arrival, mealtime, or destination visits.
 
 ---
 
-### Step 7: Make a User an Admin
-In Firestore Console, open the `users` collection, find your user document, and set:
-```json
-{ "isAdmin": true }
-```
+## 🔔 Notification System Details
+
+The app uses a "Smart Proactive Reminder" system:
+
+| Event | Logic | Notification Timing |
+| :--- | :--- | :--- |
+| **Arrival** | Triggered by `arrivalTime` | 15 mins before |
+| **Meals** | If BF, LN, or DN is selected | 08:30 AM, 01:30 PM, 08:30 PM |
+| **Discovery** | Triggered by Destination tag | 11:00 AM |
+| **Rest** | Triggered by `reachingTime` | 15 mins before |
+
+**Mechanism**:
+1. When a booking is confirmed, `scheduleTripReminders()` is called.
+2. It generates a unique `baseId` from the `bookingId`.
+3. It iterates through every day, calculating `TZDateTime` using the `timezone` package.
+4. Notifications are pushed to the system tray even if the app is closed.
 
 ---
 
-## 🚀 Running the App
+## 🚀 Getting Started
 
-```bash
-# Get dependencies
-flutter pub get
-
-# Run on Android emulator / device
-flutter run
-
-# Run on Chrome (web)
-flutter run -d chrome
-
-# Release build
-flutter build apk --release       # Android
-flutter build ios --release        # iOS
-flutter build web --release        # Web
-```
+1. **Install Dependencies**: `flutter pub get`
+2. **Firebase Setup**: 
+   - Add `google-services.json` (Android) or `GoogleService-Info.plist` (iOS).
+   - Enable Email/Password Auth & Firestore.
+3. **Run**: `flutter run`
 
 ---
 
-## 📁 Project Structure
-```
-lib/
-├── main.dart                    # App entry + Firebase init
-├── router.dart                  # GoRouter navigation
-├── firebase_options.dart        # Firebase config (you fill this)
-├── models/
-│   ├── package_model.dart
-│   ├── hotel_model.dart
-│   ├── destination_model.dart
-│   ├── booking_model.dart
-│   └── user_model.dart
-├── services/
-│   ├── auth_service.dart        # Firebase Auth wrapper
-│   └── firestore_service.dart   # Firestore CRUD + streams
-├── providers/
-│   ├── auth_provider.dart       # Auth state management
-│   └── trip_provider.dart       # Packages, bookings, CRUD
-├── utils/
-│   └── app_theme.dart           # Dark theme colors + styles
-└── screens/
-    ├── home/home_screen.dart          # Package listing
-    ├── package/package_detail_screen.dart  # Detail + day planner
-    ├── booking/
-    │   ├── booking_screen.dart        # Confirmation
-    │   └── my_bookings_screen.dart    # User's trips
-    ├── auth/
-    │   ├── login_screen.dart
-    │   └── register_screen.dart
-    └── admin/admin_screen.dart        # Full CRUD admin panel
-```
-
-## ✨ Features
-- **Real-time data** via Firestore streams
-- **Firebase Authentication** (email/password)
-- **Dark theme** matching the web version
-- **Day Planner** per-day destination + hotel selection
-- **Admin Panel** with full CRUD for packages, hotels, destinations
-- **Booking system** stored in Firestore
-- **Go Router** navigation with auth guards
-- **Cached network images** with shimmer loading
+## 🇮🇳 India Grand Setup (Bulk Data)
+For testing, developers can use the "Build India Itineraries" button in the Vendor Dashboard. This adds:
+- **14 Cities**: Delhi, Mumbai, Jaipur, Udaipur, Goa, Agra, Varanasi, Manali, Chennai, Kolkata, Bangalore, Kochi, Shimla, Rishikesh.
+- **Multiple Linked Records**: Each city gets 2 Hotels, 2 Destinations, and 2 Activities linked to 1 primary Package.

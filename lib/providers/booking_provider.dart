@@ -1,11 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/booking_model.dart';
 import '../services/firestore_service.dart';
-import 'auth_provider.dart';
-import 'package:provider/provider.dart' as legacy_provider;
-import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../models/user_model.dart';
 
 final firestoreServiceProvider = Provider((ref) => FirestoreService());
+
+final authServiceProvider = Provider((ref) => AuthService());
+
+final vendorProvider =
+    FutureProvider.family<UserModel?, String>((ref, vendorId) async {
+  if (vendorId.isEmpty) return null;
+  return ref.watch(authServiceProvider).getUserModel(vendorId);
+});
 
 // User Bookings Provider
 final userBookingsProvider =

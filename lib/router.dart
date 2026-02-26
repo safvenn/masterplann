@@ -45,10 +45,11 @@ GoRouter buildRouter(BuildContext context) {
       if (location.startsWith('/vendor') && !auth.isVendor && !auth.isAdmin)
         return '/';
 
-      // Logged in but on auth pages — go home
-      // Don't redirect from auth pages during sign-in (let the screen handle it)
-      // Only redirect if already logged in BEFORE visiting the page
-      if (auth.isLoggedIn && isAuthPage) return '/';
+      // Logged in but on auth pages or home — go to specific dashboard if vendor
+      if (auth.isLoggedIn && (isAuthPage || location == '/')) {
+        if (auth.isVendor && !auth.isAdmin) return '/vendor';
+        return location == '/' ? null : '/';
+      }
 
       return null;
     },

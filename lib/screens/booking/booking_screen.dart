@@ -12,6 +12,7 @@ import '../../models/hotel_model.dart';
 import '../../models/activity_model.dart';
 import '../../utils/app_theme.dart';
 import '../../services/notification_service.dart';
+import '../../models/user_model.dart';
 
 class BookingScreen extends ConsumerStatefulWidget {
   final String bookingId;
@@ -49,7 +50,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen>
           (b) => b.id == widget.bookingId,
           orElse: () => throw Exception('Booking not found'),
         );
-        return _buildUI(context, booking, trip);
+        final vendorAsync = ref.watch(vendorProvider(booking.vendorId));
+        final vendor = vendorAsync.valueOrNull;
+        return _buildUI(context, booking, trip, vendor);
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -57,8 +60,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen>
     );
   }
 
-  Widget _buildUI(
-      BuildContext context, BookingModel booking, TripProvider trip) {
+  Widget _buildUI(BuildContext context, BookingModel booking, TripProvider trip,
+      UserModel? vendor) {
     final isCompleted = booking.status == 'completed';
     final pkg = trip.packages.firstWhere(
       (p) => p.id == booking.packageId,
@@ -184,6 +187,88 @@ class _BookingScreenState extends ConsumerState<BookingScreen>
               64,
             ),
           ),
+          if (vendor != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Organizer',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: AppTheme.primary.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: AppTheme.primary.withOpacity(0.1),
+                            child: const Icon(Icons.business_rounded,
+                                color: AppTheme.primary),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        vendor.businessName ?? vendor.name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Icon(Icons.verified_rounded,
+                                        color: Colors.blue, size: 16),
+                                  ],
+                                ),
+                                if (vendor.businessPhone != null)
+                                  Text(
+                                    'Mobile: ${vendor.businessPhone}',
+                                    style: const TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 13),
+                                  ),
+                                if (vendor.businessAddress != null)
+                                  Text(
+                                    vendor.businessAddress!,
+                                    style: const TextStyle(
+                                        color: AppTheme.textMuted,
+                                        fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.call_outlined,
+                                color: AppTheme.primary),
+                            onPressed: () {}, // Could launch url_launcher here
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
         body: TabBarView(
           controller: _tabCtrl,

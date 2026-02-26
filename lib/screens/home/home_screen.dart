@@ -111,21 +111,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: Center(
-                          child: Text(
-                            auth.user?.name.isNotEmpty == true
-                                ? auth.user!.name
-                                    .trim()
-                                    .split(' ')
-                                    .map((w) => w[0])
-                                    .take(2)
-                                    .join()
-                                    .toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
+                        child: TripImage(
+                          imageUrl: auth.user!.photoUrl,
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          fallback: Center(
+                            child: Text(
+                              auth.user!.name.isNotEmpty
+                                  ? auth.user!.name[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),

@@ -59,7 +59,10 @@ class AuthService {
     final user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(name);
-      if (photoUrl != null) await user.updatePhotoURL(photoUrl);
+      // Only update Auth photoURL if it's a real web URL (Base64 is too long for Auth profile)
+      if (photoUrl != null && photoUrl.startsWith('http')) {
+        await user.updatePhotoURL(photoUrl);
+      }
     }
     final data = <String, dynamic>{
       'name': name,

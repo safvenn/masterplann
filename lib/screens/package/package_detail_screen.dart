@@ -465,74 +465,6 @@ class _OverviewTab extends StatelessWidget {
             ),
           ),
         ],
-        if (vendor != null) ...[
-          const SizedBox(height: 24),
-          const Text(
-            'Organizer',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppTheme.primary.withOpacity(0.1),
-                  child: const Icon(Icons.business_rounded,
-                      color: AppTheme.primary),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              vendor!.businessName ?? vendor!.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.verified_rounded,
-                              color: Colors.blue, size: 16),
-                        ],
-                      ),
-                      if (vendor!.businessPhone != null)
-                        Text(
-                          'Mobile: ${vendor!.businessPhone}',
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 13),
-                        ),
-                      if (vendor!.businessAddress != null)
-                        Text(
-                          vendor!.businessAddress!,
-                          style: const TextStyle(
-                              color: AppTheme.textMuted, fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon:
-                      const Icon(Icons.call_outlined, color: AppTheme.primary),
-                  onPressed: () {}, // Could launch url_launcher here
-                ),
-              ],
-            ),
-          ),
-        ],
         if (destinations.isNotEmpty) ...[
           const SizedBox(height: 24),
           const Text(
@@ -590,6 +522,76 @@ class _OverviewTab extends StatelessWidget {
               ),
             ),
           ),
+        ],
+        if (vendor != null) ...[
+       
+          const Text(
+            'Organizer',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: AppTheme.primary.withOpacity(0.1),
+                  child: const Icon(Icons.business_rounded,
+                      color: AppTheme.primary, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              vendor!.businessName ?? vendor!.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified_rounded,
+                              color: Colors.blue, size: 14),
+                        ],
+                      ),
+                      if (vendor!.businessPhone != null)
+                        Text(
+                          'Mobile: ${vendor!.businessPhone}',
+                          style: const TextStyle(
+                              color: AppTheme.textSecondary, fontSize: 11),
+                        ),
+                      if (vendor!.businessAddress != null)
+                        Text(
+                          vendor!.businessAddress!,
+                          style: const TextStyle(
+                              color: AppTheme.textMuted, fontSize: 10),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.call_outlined,
+                      color: AppTheme.primary, size: 20),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
       ],
     );

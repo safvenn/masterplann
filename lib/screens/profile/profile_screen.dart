@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/image_picker_widget.dart';
 import '../../widgets/trip_image.dart';
+import '../../providers/theme_provider.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 //  PROFILE SCREEN
@@ -173,6 +174,26 @@ class ProfileScreen extends StatelessWidget {
                         label: 'Edit Profile',
                         color: AppTheme.primary,
                         onTap: () => _showEditSheet(context, auth),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Preferences ──────────────────────────────────────
+                  _SectionLabel('Preferences'),
+                  const SizedBox(height: 10),
+                  _InfoCard(
+                    children: [
+                      Consumer<ThemeProvider>(
+                        builder: (context, theme, _) => _ToggleRow(
+                          icon: theme.isDarkMode
+                              ? Icons.dark_mode_rounded
+                              : Icons.light_mode_rounded,
+                          label: 'Dark Mode',
+                          value: theme.isDarkMode,
+                          onChanged: (_) => theme.toggleTheme(),
+                        ),
                       ),
                     ],
                   ),
@@ -707,6 +728,53 @@ class _ActionRow extends StatelessWidget {
                   size: 20, color: AppTheme.textMuted),
             ],
           ),
+        ),
+      );
+}
+
+class _ToggleRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _ToggleRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: AppTheme.primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Switch.adaptive(
+              value: value,
+              onChanged: onChanged,
+              activeColor: AppTheme.primary,
+            ),
+          ],
         ),
       );
 }

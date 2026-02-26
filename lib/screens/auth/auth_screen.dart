@@ -359,7 +359,7 @@ class _RegisterFormState extends State<_RegisterForm>
         );
         if (mounted) {
           if (auth.isAdmin) {
-            context.go('/admin');
+            context.go('/');
           } else if (auth.isVendor) {
             context.go('/vendor');
           } else {
