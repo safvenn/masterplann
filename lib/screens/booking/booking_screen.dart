@@ -200,7 +200,6 @@ class _BookingScreenState extends ConsumerState<BookingScreen>
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                     ),
-
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -1011,11 +1010,9 @@ class _SummaryCard extends StatelessWidget {
 
 class _DetailRow extends StatelessWidget {
   final String label, value;
-  final Color? valueColor;
   const _DetailRow({
     required this.label,
     required this.value,
-    this.valueColor,
   });
   @override
   Widget build(BuildContext context) => Padding(
@@ -1031,10 +1028,10 @@ class _DetailRow extends StatelessWidget {
               child: Text(
                 value,
                 textAlign: TextAlign.right,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
-                  color: valueColor ?? AppTheme.textPrimary,
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ),

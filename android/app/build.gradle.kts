@@ -11,15 +11,25 @@ plugins {
 android {
     namespace = "com.tripplanner.trip_planner_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
+
+    // ensure any transitive dependency of desugar_jdk_libs is upgraded
+    configurations.all {
+        resolutionStrategy {
+            force("com.android.tools:desugar_jdk_libs:2.1.4")
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Kotlin DSL uses "is" prefix for boolean flags
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        // setting jvmTarget directly; warning is fine
+        jvmTarget = "17"
     }
 
     defaultConfig {
@@ -27,10 +37,11 @@ android {
         applicationId = "com.tripplanner.trip_planner_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -41,6 +52,13 @@ android {
         }
     }
 }
+
+// add desugaring dependency support
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
 
 flutter {
     source = "../.."

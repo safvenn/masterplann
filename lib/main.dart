@@ -12,6 +12,7 @@ import 'services/notification_service.dart';
 import 'providers/theme_provider.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService().init();
   runApp(
